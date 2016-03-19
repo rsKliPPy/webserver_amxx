@@ -237,3 +237,8 @@ AMX_NATIVE_INFO g_NativeList[] = {
 
 	{nullptr, nullptr}
 };
+
+
+extern "C" void __cxa_pure_virtual() {
+
+}

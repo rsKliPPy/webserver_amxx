@@ -31,7 +31,7 @@
 /* #undef HAVE_C11_GMTIME_S */
 
 /* Have clock_gettime */
-#define HAVE_CLOCK_GETTIME 1
+/* #define HAVE_CLOCK_GETTIME 1 */
 
 /* Define to 1 if you have `clock_get_time', `host_get_clock_service' and
    `mach_port_deallocate' functions. */
