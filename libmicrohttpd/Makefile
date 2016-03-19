@@ -1,8 +1,6 @@
 #------------------------------------------------------------------------------
 
-# To supports HTTPS, you also have to go into MHD_config.h
-# and define SUPPORT_HTTPS in there
-SUPPORT_HTTPS = false
+HTTPS_SUPPORT = false
 
 # Compiler of choice
 CC=gcc
@@ -20,9 +18,10 @@ OPTS = -shared -m32 -Wall -Werror -Wno-error=unused-result
 SOURCES = md5.cpp base64.cpp daemon.cpp tsearch.cpp internal.cpp response.cpp basicauth.cpp connection.cpp digestauth.cpp \
 	memorypool.cpp sysfdsetsize.cpp postprocessor.cpp reason_phrase.cpp mhd_mono_clock.cpp
 
-ifeq ($(SUPPORT_HTTPS),true)
+ifeq ($(HTTPS_SUPPORT),true)
  SOURCES += connection_https.c
  LIBS += -lgnutls
+ OPTS += -DHTTPS_SUPPORT
 endif
 
 SOURCESDIR = ./microhttpd/
