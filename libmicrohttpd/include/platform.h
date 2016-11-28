@@ -34,7 +34,13 @@
 #ifndef MHD_PLATFORM_H
 #define MHD_PLATFORM_H
 
-#include "MHD_config.h"
+#ifdef _WIN32
+#include "MHD_config_win32.h"
+#elif __APPLE__
+#include "MHD_config_osx.h"
+#else
+#include "MHD_config_linux.h"
+#endif
 
 #ifndef BUILDING_MHD_LIB
 #ifdef _MHD_EXTERN
@@ -57,22 +63,6 @@
 #endif
 #endif /* BUILDING_MHD_LIB */
 
-
-#ifdef FD_SETSIZE
-/* FD_SETSIZE defined in command line or in MHD_config.h */
-/* Some platforms (FreeBSD, Solaris, W32) allow to override
-   default FD_SETSIZE by defining it before including
-   headers. */
-#define _MHD_SYS_DEFAULT_FD_SETSIZE get_system_fdsetsize_value()
-#elif defined(_WIN32) && !defined(__CYGWIN__)
-/* Platform with WinSock and without overridden FD_SETSIZE */
-#define FD_SETSIZE 2048 /* Override default small value */
-#define _MHD_SYS_DEFAULT_FD_SETSIZE get_system_fdsetsize_value()
-#else /* !FD_SETSIZE && !WinSock*/
-#define _MHD_SYS_DEFAULT_FD_SETSIZE FD_SETSIZE
-#define _MHD_FD_SETSIZE_IS_DEFAULT 1
-#endif /* FD_SETSIZE */
-
 #define _XOPEN_SOURCE_EXTENDED  1
 #if OS390
 #define _OPEN_THREADS
@@ -84,22 +74,15 @@
 #if defined(_WIN32)
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0501
-#else /* _WIN32_WINNT */
+#else // _WIN32_WINNT
 #if _WIN32_WINNT < 0x0501
 #error "Headers for Windows XP or later are required"
-#endif /* _WIN32_WINNT < 0x0501 */
-#endif /* _WIN32_WINNT */
+#endif // _WIN32_WINNT < 0x0501
+#endif // _WIN32_WINNT
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
 #endif /* !WIN32_LEAN_AND_MEAN */
-#endif /* _WIN32 */
-
-#if LINUX+0 && (defined(HAVE_SENDFILE64) || defined(HAVE_LSEEK64)) && ! defined(_LARGEFILE64_SOURCE)
-#define _LARGEFILE64_SOURCE 1
-#endif
-#ifdef HAVE_C11_GMTIME_S
-#define __STDC_WANT_LIB_EXT1__ 1
-#endif /* HAVE_C11_GMTIME_S */
+#endif // _WIN32
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -117,7 +100,7 @@
 #undef HAVE_CONFIG_H
 #include <pthread.h>
 #define HAVE_CONFIG_H 1
-#endif /* MHD_USE_POSIX_THREADS */
+#endif // MHD_USE_POSIX_THREADS
 
 /* different OSes have fd_set in
    a broad range of header files;
@@ -170,15 +153,11 @@
 #include <arpa/inet.h>
 #endif
 
-#if defined(__CYGWIN__) && !defined(_SYS_TYPES_FD_SET)
-/* Do not define __USE_W32_SOCKETS under Cygwin! */
-#error Cygwin with winsock fd_set is not supported
-#endif
 
 #if defined(_WIN32) && !defined(__CYGWIN__)
 #include <ws2tcpip.h>
-#define sleep(seconds) ((SleepEx((seconds)*1000, 1)==0)?0:(seconds))
-#define usleep(useconds) ((SleepEx((useconds)/1000, 1)==0)?0:-1)
+#define sleep(seconds) (SleepEx((seconds)*1000, 1)/1000)
+#define usleep(useconds) (void)SleepEx((useconds)/1000, 1)
 #endif
 
 #if !defined(SHUT_WR) && defined(SD_SEND)
@@ -194,39 +173,23 @@
 #if defined(_MSC_FULL_VER) && !defined (_SSIZE_T_DEFINED)
 #define _SSIZE_T_DEFINED
 typedef intptr_t ssize_t;
-#endif /* !_SSIZE_T_DEFINED */
-
+#endif // !_SSIZE_T_DEFINED */
 #ifndef MHD_SOCKET_DEFINED
 /**
  * MHD_socket is type for socket FDs
  */
-#if !defined(_WIN32) || defined(__CYGWIN__)
+#if !defined(_WIN32) || defined(_SYS_TYPES_FD_SET)
 #define MHD_POSIX_SOCKETS 1
 typedef int MHD_socket;
 #define MHD_INVALID_SOCKET (-1)
-#else  /* defined(_WIN32) && !defined(__CYGWIN__) */
+#else /* !defined(_WIN32) || defined(_SYS_TYPES_FD_SET) */
 #define MHD_WINSOCK_SOCKETS 1
 #include <winsock2.h>
 typedef SOCKET MHD_socket;
 #define MHD_INVALID_SOCKET (INVALID_SOCKET)
-#endif /* defined(_WIN32) && !defined(__CYGWIN__) */
+#endif /* !defined(_WIN32) || defined(_SYS_TYPES_FD_SET) */
 #define MHD_SOCKET_DEFINED 1
 #endif /* MHD_SOCKET_DEFINED */
-
-/**
- * _MHD_SOCKOPT_BOOL_TYPE is type for bool parameters for setsockopt()/getsockopt()
- */
-#ifdef MHD_POSIX_SOCKETS
-typedef int _MHD_SOCKOPT_BOOL_TYPE;
-#else /* MHD_WINSOCK_SOCKETS */
-typedef BOOL _MHD_SOCKOPT_BOOL_TYPE;
-#endif /* MHD_WINSOCK_SOCKETS */
-
-#ifndef _WIN32
-typedef time_t _MHD_TIMEVAL_TV_SEC_TYPE;
-#else  /* _WIN32 */
-typedef long _MHD_TIMEVAL_TV_SEC_TYPE;
-#endif /* _WIN32 */
 
 /* Force don't use pipes on W32 */
 #if defined(_WIN32) && !defined(MHD_DONT_USE_PIPES)

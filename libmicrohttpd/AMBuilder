@@ -1,0 +1,30 @@
+import os, platform
+
+lib = builder.compiler.StaticLibrary('libmicrohttpd')
+
+lib.compiler.includes += [
+  os.path.join(builder.sourcePath, 'webcon', 'libmicrohttpd', 'microhttpd'),
+  os.path.join(builder.sourcePath, 'webcon', 'libmicrohttpd', 'include')
+]
+
+lib.sources += [
+  'microhttpd/connection.c',
+  'microhttpd/reason_phrase.c',
+  'microhttpd/daemon.c',
+  'microhttpd/internal.c',
+  'microhttpd/memorypool.c',
+  'microhttpd/response.c',
+  'microhttpd/tsearch.c',
+  'microhttpd/postprocessor.c',
+  'microhttpd/digestauth.c',
+  'microhttpd/md5.c',
+  'microhttpd/basicauth.c',
+  'microhttpd/base64.c'
+]
+
+if builder.target_platform == 'windows':
+  lib.sources += [
+    'platform/w32functions.c'
+  ]
+
+rvalue = builder.Add(lib)

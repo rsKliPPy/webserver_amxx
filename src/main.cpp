@@ -37,6 +37,8 @@ void ServerActivate(edict_t *pEdictList, int edictCount, int clientMax) {
 	g_NotFoundResponse = MHD_create_response_from_buffer(strlen(g_NotFoundPage), (void * const)g_NotFoundPage, MHD_RESPMEM_PERSISTENT);
 
 	MF_Log("Successfully started HTTP Daemon on port %i", iPort);
+
+	RETURN_META(MRES_IGNORED);
 }
 
 void ServerDeactivate(void) {
@@ -46,6 +48,8 @@ void ServerDeactivate(void) {
 
 	g_ResponseHandles.clear();
 	g_RequestCallbacks.clear();
+
+	RETURN_META(MRES_IGNORED);
 }
 
 void OnAmxxAttach(void) {
@@ -90,3 +94,7 @@ int MHDConnectionCallback(void *cls, struct MHD_Connection *connection, const ch
 	delete[] ident;
 	return MHD_queue_response(connection, 404, g_NotFoundResponse);
 }
+
+
+
+

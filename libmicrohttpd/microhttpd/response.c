@@ -24,11 +24,8 @@
  * @author Christian Grothoff
  */
 
-#define MHD_NO_DEPRECATION 1
-
 #include "internal.h"
 #include "response.h"
-#include "mhd_limits.h"
 
 #if defined(_WIN32) && defined(MHD_W32_MUTEX_)
 #ifndef WIN32_LEAN_AND_MEAN
@@ -320,37 +317,9 @@ file_reader (void *cls, uint64_t pos, char *buf, size_t max)
 {
   struct MHD_Response *response = cls;
   ssize_t n;
-  const int64_t offset64 = (int64_t)(pos + response->fd_off);
 
-  if (offset64 < 0)
-    return MHD_CONTENT_READER_END_WITH_ERROR; /* seek to required position is not possible */
-
-#if defined(HAVE_LSEEK64)
-  if (lseek64 (response->fd, offset64, SEEK_SET) != offset64)
-    return MHD_CONTENT_READER_END_WITH_ERROR; /* can't seek to required position */
-#elif defined(HAVE___LSEEKI64)
-  if (_lseeki64 (response->fd, offset64, SEEK_SET) != offset64)
-    return MHD_CONTENT_READER_END_WITH_ERROR; /* can't seek to required position */
-#else /* !HAVE___LSEEKI64 */
-  if (sizeof(off_t) < sizeof(uint64_t) && offset64 > (uint64_t)INT32_MAX)
-    return MHD_CONTENT_READER_END_WITH_ERROR; /* seek to required position is not possible */
-
-  if (lseek (response->fd, (off_t)offset64, SEEK_SET) != (off_t)offset64)
-    return MHD_CONTENT_READER_END_WITH_ERROR; /* can't seek to required position */
-#endif
-
-#ifndef _WIN32
-  if (max > SSIZE_MAX)
-    max = SSIZE_MAX;
-
+  (void) lseek (response->fd, pos + response->fd_off, SEEK_SET);
   n = read (response->fd, buf, max);
-#else  /* _WIN32 */
-  if (max > INT32_MAX)
-    max = INT32_MAX;
-
-  n = read (response->fd, buf, (unsigned int)max);
-#endif /* _WIN32 */
-
   if (0 == n)
     return MHD_CONTENT_READER_END_OF_STREAM;
   if (n < 0)
@@ -374,7 +343,6 @@ free_callback (void *cls)
   response->fd = -1;
 }
 
-#undef MHD_create_response_from_fd_at_offset
 
 /**
  * Create a response object.  The response object can be extended with
@@ -397,43 +365,10 @@ MHD_create_response_from_fd_at_offset (size_t size,
 				       int fd,
 				       off_t offset)
 {
-  return MHD_create_response_from_fd_at_offset64 (size, fd, offset);
-}
-
-
-/**
- * Create a response object.  The response object can be extended with
- * header information and then be used any number of times.
- *
- * @param size size of the data portion of the response;
- *        sizes larger than 2 GiB may be not supported by OS or
- *        MHD build; see ::MHD_FEATURE_LARGE_FILE
- * @param fd file descriptor referring to a file on disk with the
- *        data; will be closed when response is destroyed;
- *        fd should be in 'blocking' mode
- * @param offset offset to start reading from in the file;
- *        reading file beyond 2 GiB may be not supported by OS or
- *        MHD build; see ::MHD_FEATURE_LARGE_FILE
- * @return NULL on error (i.e. invalid arguments, out of memory)
- * @ingroup response
- */
-_MHD_EXTERN struct MHD_Response *
-MHD_create_response_from_fd_at_offset64 (uint64_t size,
-                                         int fd,
-                                         uint64_t offset)
-{
   struct MHD_Response *response;
 
-#if !defined(HAVE___LSEEKI64) && !defined(HAVE_LSEEK64)
-  if (sizeof(uint64_t) > sizeof(off_t) &&
-      (size > (uint64_t)INT32_MAX || offset > (uint64_t)INT32_MAX || (size + offset) >= (uint64_t)INT32_MAX))
-    return NULL;
-#endif
-  if ((int64_t)size < 0 || (int64_t)offset < 0 || (int64_t)(size + offset) < 0)
-    return NULL;
-
   response = MHD_create_response_from_callback (size,
-						4 * 1024,
+						1024 * 1024,
 						&file_reader,
 						NULL,
 						&free_callback);
@@ -459,28 +394,7 @@ struct MHD_Response *
 MHD_create_response_from_fd (size_t size,
 			     int fd)
 {
-  return MHD_create_response_from_fd_at_offset64 (size, fd, 0);
-}
-
-
-/**
- * Create a response object.  The response object can be extended with
- * header information and then be used any number of times.
- *
- * @param size size of the data portion of the response;
- *        sizes larger than 2 GiB may be not supported by OS or
- *        MHD build; see ::MHD_FEATURE_LARGE_FILE
- * @param fd file descriptor referring to a file on disk with the
- *        data; will be closed when response is destroyed;
- *        fd should be in 'blocking' mode
- * @return NULL on error (i.e. invalid arguments, out of memory)
- * @ingroup response
- */
-_MHD_EXTERN struct MHD_Response *
-MHD_create_response_from_fd64(uint64_t size,
-                              int fd)
-{
-  return MHD_create_response_from_fd_at_offset64 (size, fd, 0);
+  return MHD_create_response_from_fd_at_offset (size, fd, 0);
 }
 
 

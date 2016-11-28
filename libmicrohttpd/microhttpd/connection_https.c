@@ -28,10 +28,9 @@
 
 #include "internal.h"
 #include "connection.h"
-#include "connection_https.h"
 #include "memorypool.h"
 #include "response.h"
-#include "mhd_mono_clock.h"
+#include "reason_phrase.h"
 #include <gnutls/gnutls.h>
 
 
@@ -48,7 +47,7 @@ run_tls_handshake (struct MHD_Connection *connection)
 {
   int ret;
 
-  connection->last_activity = MHD_monotonic_sec_counter();
+  connection->last_activity = MHD_monotonic_time();
   if (connection->state == MHD_TLS_CONNECTION_INIT)
     {
       ret = gnutls_handshake (connection->tls_session);
@@ -69,8 +68,8 @@ run_tls_handshake (struct MHD_Connection *connection)
       MHD_DLOG (connection->daemon,
 		"Error: received handshake message out of context\n");
 #endif
-      MHD_connection_close_ (connection,
-                             MHD_REQUEST_TERMINATED_WITH_ERROR);
+      MHD_connection_close (connection,
+			    MHD_REQUEST_TERMINATED_WITH_ERROR);
       return MHD_YES;
     }
   return MHD_NO;
@@ -141,9 +140,9 @@ MHD_tls_connection_handle_idle (struct MHD_Connection *connection)
             MHD_state_to_string (connection->state));
 #endif
   timeout = connection->connection_timeout;
-  if ( (timeout != 0) && (timeout <= (MHD_monotonic_sec_counter() - connection->last_activity)))
-    MHD_connection_close_ (connection,
-                           MHD_REQUEST_TERMINATED_TIMEOUT_REACHED);
+  if ( (timeout != 0) && (timeout <= (MHD_monotonic_time() - connection->last_activity)))
+    MHD_connection_close (connection,
+			  MHD_REQUEST_TERMINATED_TIMEOUT_REACHED);
   switch (connection->state)
     {
       /* on newly created connections we might reach here before any reply has been received */

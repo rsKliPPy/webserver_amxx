@@ -590,9 +590,8 @@ int MHD_W32_pair_of_sockets_(SOCKET sockets_pair[2])
                       || WSAGetLastError() == WSAEWOULDBLOCK))
                 {
                   struct sockaddr_in accepted_from_addr;
-                  SOCKET server_s;
                   addr_len = c_addinlen;
-                  server_s = accept(listen_s,
+                  SOCKET server_s = accept(listen_s,
                       (struct sockaddr*) &accepted_from_addr, &addr_len);
                   if (INVALID_SOCKET != server_s)
                     {
@@ -654,7 +653,7 @@ int W32_snprintf(char *__restrict s, size_t n, const char *__restrict format, ..
     va_start(args, format);
     ret = _vsnprintf(s, n, format, args);
     va_end(args);
-    if ((int)n == ret)
+    if (n == ret)
       s[n - 1] = 0;
     if (ret >= 0)
       return ret;
@@ -680,10 +679,10 @@ void W32_SetThreadName(const DWORD thread_id, const char *thread_name)
 #pragma pack(push,8)
   struct thread_info_struct
   {
-    DWORD type;   /* Must be 0x1000. */
-    LPCSTR name;  /* Pointer to name (in user address space). */
-    DWORD ID;     /* Thread ID (-1=caller thread). */
-    DWORD flags;  /* Reserved for future use, must be zero. */
+    DWORD type;   // Must be 0x1000.
+    LPCSTR name;  // Pointer to name (in user address space).
+    DWORD ID;     // Thread ID (-1=caller thread).
+    DWORD flags;  // Reserved for future use, must be zero.
   } thread_info;
 #pragma pack(pop)
 

@@ -219,8 +219,7 @@ MHD_pool_reallocate (struct MemoryPool *pool,
   if ((pool->end < old_size) || (pool->end < asize))
     return NULL;                /* unsatisfiable or bogus request */
 
-  if ( (pool->pos >= old_size) &&
-       (&pool->memory[pool->pos - old_size] == old) )
+  if ((pool->pos >= old_size) && (&pool->memory[pool->pos - old_size] == old))
     {
       /* was the previous allocation - optimize! */
       if (pool->pos + asize - old_size <= pool->end)
@@ -241,7 +240,7 @@ MHD_pool_reallocate (struct MemoryPool *pool,
     {
       /* fits */
       ret = &pool->memory[pool->pos];
-      memmove (ret, old, old_size);
+      memcpy (ret, old, old_size);
       pool->pos += asize;
       return ret;
     }
@@ -252,40 +251,32 @@ MHD_pool_reallocate (struct MemoryPool *pool,
 
 /**
  * Clear all entries from the memory pool except
- * for @a keep of the given @a size. The pointer
- * returned should be a buffer of @a new_size where
- * the first @a copy_bytes are from @a keep.
+ * for @a keep of the given @a size.
  *
  * @param pool memory pool to use for the operation
  * @param keep pointer to the entry to keep (maybe NULL)
- * @param copy_bytes how many bytes need to be kept at this address
- * @param new_size how many bytes should the allocation we return have?
- *                 (should be larger or equal to @a copy_bytes)
+ * @param size how many bytes need to be kept at this address
  * @return addr new address of @a keep (if it had to change)
  */
 void *
 MHD_pool_reset (struct MemoryPool *pool,
 		void *keep,
-		size_t copy_bytes,
-                size_t new_size)
+		size_t size)
 {
   if (NULL != keep)
     {
       if (keep != pool->memory)
         {
-          memmove (pool->memory,
-                   keep,
-                   copy_bytes);
+          memmove (pool->memory, keep, size);
           keep = pool->memory;
         }
     }
   pool->end = pool->size;
-  /* technically not needed, but safer to zero out */
-  memset (&pool->memory[copy_bytes],
+  memset (&pool->memory[size],
 	  0,
-	  pool->size - copy_bytes);
+	  pool->size - size);
   if (NULL != keep)
-    pool->pos = ROUND_TO_ALIGN (new_size);
+    pool->pos = ROUND_TO_ALIGN(size);
   return keep;
 }
 
