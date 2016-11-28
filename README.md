@@ -1,21 +1,16 @@
 # WebServer AMXX
+WebServer AMXX is a module that host a web server on top of a HLDS and provides API to AMXX plugins, allowing them to create responses.
+Plugins can respond with text strings, binary strings and files.
 
-Has to be statically linked against [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/) (Linux build already builds microhttpd).
+## Build process
+[AMBuild](https://wiki.alliedmods.net/AMBuild) is a requirement.
 
-Requires [AMTL](https://www.github.com/alliedmodders/amtl) to be downloaded and path to it setup in the Makefile.
-
-## Compile process
-#### Linux
-Open up `./Makefile` and setup `HLSDK`, `METAMOD` and `AMTL` variables for yourself. Then run:
+Go into the project directory (where configure.py is) and do:
 ```
-cd libmicrohttpd
-make
-cd ..
-make
+mkdir build
+cd build
+python ../configure.py
+ambuild
 ```
-#### Windows
-Make sure that `HLSDK`, `METAMOD` and `AMTL` environment variables are properly set up.
 
-Download [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/) and compile it by hand and put the output `libmicrohttpd.lib` in project's root folder (this step will be cut out in the future). 
-
-Navigate to `vs2015/` and open up `webserver_amxx.sln` in Visual Studio 2015 (will possibly work in earlier versions). Hit the compile button and binary will be output to `Release/webserver_amxx.dll` or `Debug/webserver_amxx.dll` depending on your configuration.
+You will be required to have HLSDK and METAMOD environment variables setup. You can also pass them to configure.py as command line arguments. Execute `python configure.py --help` to see available options.

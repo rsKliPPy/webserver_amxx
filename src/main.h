@@ -11,12 +11,15 @@
 #else
 #include <winsock2.h>
 #endif
+
 #include <microhttpd.h>
+#include <amtl/am-vector.h>
 
 #include "amxxsdk/amxxmodule.h"
-#include <amtl/am-vector.h>
+
 #include "WSResponse.h"
 #include "RequestCallback.h"
+#include "RequestInfo.h"
 
 
 // We only care for IPv4
@@ -28,7 +31,6 @@ extern AMX_NATIVE_INFO g_NativeList[];
 extern ke::Vector<WSResponse *> g_ResponseHandles;
 extern ke::Vector<RequestCallback *> g_RequestCallbacks;
 
-// Damn long prototype
 int MHDConnectionCallback(void *cls, struct MHD_Connection *connection,
 	const char *url, const char *method,
 	const char *version, const char *upload_data,

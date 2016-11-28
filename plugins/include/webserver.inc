@@ -273,7 +273,7 @@ native WS_DestroyResponse(&WSResponse: response);
  * @param 				1 (MHD_YES) if the response was successfully queued,
  * 						0 (MHD_NO) otherwise.
  */
-native WS_QueueResponse(WSConnection: connection, WSStatusCode: status, WSResponse: response);
+native WS_QueueResponse(WSConnection: connection, status, WSResponse: response);
 
 /**
  * Adds a HTTP header to the response.

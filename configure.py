@@ -16,7 +16,7 @@ prep.options.add_option('--enable-debug', action='store_const', const='1', dest=
                        help='Enable debugging symbols')
 prep.options.add_option('--enable-optimize', action='store_const', const='1', dest='opt',
                        help='Enable optimization')
-prep.options.add_option('--https--support', action='store_const', const='0', dest='https',
+prep.options.add_option('--https-support', action='store_const', const='1', dest='https',
                        help='Enable HTTPS support')
 prep.options.add_option('--metamod', type='string', dest='metamod_path', default='',
                        help='Path to Metamod source code')

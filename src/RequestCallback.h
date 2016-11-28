@@ -3,17 +3,20 @@
 
 #include <amtl/am-string.h>
 
-struct RequestCallback {
+struct RequestCallback
+{
 public:
 	int m_Forward;
 	ke::AString m_Ident;
 
-	RequestCallback(const char *ident, int forward) {
+	RequestCallback(const char *ident, int forward)
+	{
 		m_Ident = ident;
 		m_Forward = forward;
 	}
 
-	~RequestCallback() {
+	~RequestCallback()
+	{
 		MF_UnregisterSPForward(m_Forward);
 	}
 };

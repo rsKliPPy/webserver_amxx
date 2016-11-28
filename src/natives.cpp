@@ -15,7 +15,8 @@
 
 #define AMXNATIVE(func) static cell AMX_NATIVE_CALL func(AMX *amx, cell *params)
 #define CHECKHANDLE(handle) \
-		if(handle < 0 || (size_t)handle > g_ResponseHandles.length() || g_ResponseHandles[handle]->IsFree()) { \
+		if(handle < 0 || (size_t)handle > g_ResponseHandles.length() || g_ResponseHandles[handle]->IsFree()) \
+		{ \
 			MF_LogError(amx, AMX_ERR_NATIVE, "Invalid handle %i", handle); \
 			return 0; \
 		}
@@ -23,8 +24,10 @@
 
 //forward callback(WSConnection: connection, WSMethod: method, const url[]);
 //native WS_RegisterRequestCallback(const id[], const callback[]);
-AMXNATIVE(RegisterRequestCallback) {
-	if (g_HTTPDaemon == nullptr) {
+AMXNATIVE(RegisterRequestCallback)
+{
+	if (g_HTTPDaemon == nullptr)
+	{
 		return 0;
 	}
 
@@ -33,7 +36,8 @@ AMXNATIVE(RegisterRequestCallback) {
 	const char *callback = MF_GetAmxString(amx, params[2], 1, &len);
 	int forward = MF_RegisterSPForwardByName(amx, callback, FP_CELL, FP_STRING, FP_STRING, FP_DONE);
 
-	if (forward < 1) {
+	if (forward < 1) 
+	{
 		MF_LogError(amx, AMX_ERR_NATIVE, "Function %s not found.", callback);
 		return -1;
 	}
@@ -44,8 +48,10 @@ AMXNATIVE(RegisterRequestCallback) {
 }
 
 //native WSResponse: WS_CreateStringResponse(const content[] = "");
-AMXNATIVE(CreateStringResponse) {
-	if (g_HTTPDaemon == nullptr) {
+AMXNATIVE(CreateStringResponse)
+{
+	if (g_HTTPDaemon == nullptr)
+	{
 		return -1;
 	}
 
@@ -61,8 +67,10 @@ AMXNATIVE(CreateStringResponse) {
 }
 
 //native WSResponse: WS_CreateBinaryResponse(const content[] = "", length = 0);
-AMXNATIVE(CreateBinaryResponse) {
-	if (g_HTTPDaemon == nullptr) {
+AMXNATIVE(CreateBinaryResponse)
+{
+	if (g_HTTPDaemon == nullptr)
+	{
 		return -1;
 	}
 
@@ -78,17 +86,19 @@ AMXNATIVE(CreateBinaryResponse) {
 }
 
 //native WSResponse: WS_CreateFileResponse(const path[]);
-AMXNATIVE(CreateFileResponse) {
-	if (g_HTTPDaemon == nullptr) {
+AMXNATIVE(CreateFileResponse)
+{
+	if (g_HTTPDaemon == nullptr)
+	{
 		return -1;
 	}
 
 	int len;
 	const char *path = MF_GetAmxString(amx, params[1], 0, &len);
 
-	// Thanks to Asherkin for his file descriptor code
 	int fd = openfd(MF_BuildPathname("%s", path), FDMODE);
-	if (fd < 0) {
+	if (fd < 0)
+	{
 		MF_Log("Couldn't open file for reading, errno: %d", errno);
 		return -1;
 	}
@@ -101,8 +111,10 @@ AMXNATIVE(CreateFileResponse) {
 }
 
 //native WS_AddHeader(WSResponse: response, const header[], const content[]);
-AMXNATIVE(AddHeader) {
-	if (g_HTTPDaemon == nullptr) {
+AMXNATIVE(AddHeader)
+{
+	if (g_HTTPDaemon == nullptr)
+	{
 		return 0;
 	}
 
@@ -117,8 +129,10 @@ AMXNATIVE(AddHeader) {
 }
 
 //native WS_RemoveHeader(WSResponse: response, const header[], const content[] = "");
-AMXNATIVE(RemoveHeader) {
-	if (g_HTTPDaemon == nullptr) {
+AMXNATIVE(RemoveHeader)
+{
+	if (g_HTTPDaemon == nullptr)
+	{
 		return 0;
 	}
 
@@ -128,7 +142,8 @@ AMXNATIVE(RemoveHeader) {
 	int len;
 	const char *header = MF_GetAmxString(amx, params[2], 0, &len);
 	const char *content = MF_GetAmxString(amx, params[3], 1, &len);
-	if (*content == '\0') {
+	if (*content == '\0')
+	{
 		return MHD_del_response_header(g_ResponseHandles[handle]->m_Response, header, content);
 	}
 
@@ -137,7 +152,8 @@ AMXNATIVE(RemoveHeader) {
 	// Again thanks to Asherkin
 	int success = 0;
 	const char *value;
-	while ((value = MHD_get_response_header(response, header))) {
+	while ((value = MHD_get_response_header(response, header)))
+	{
 		success = MHD_del_response_header(response, header, value) || success;
 	}
 
@@ -145,13 +161,16 @@ AMXNATIVE(RemoveHeader) {
 }
 
 //native WS_DestroyResponse(&WSResponse: response);
-AMXNATIVE(DestroyResponse) {
-	if (g_HTTPDaemon == nullptr) {
+AMXNATIVE(DestroyResponse)
+{
+	if (g_HTTPDaemon == nullptr)
+	{
 		return 0;
 	}
 
 	cell *handle = MF_GetAmxAddr(amx, params[1]);
-	if (*handle < 0 || (size_t)*handle > g_ResponseHandles.length() || g_ResponseHandles[*handle]->IsFree()) {
+	if (*handle < 0 || (size_t)*handle > g_ResponseHandles.length() || g_ResponseHandles[*handle]->IsFree())
+	{
 		*handle = -1;
 		return 0;
 	}
@@ -162,20 +181,24 @@ AMXNATIVE(DestroyResponse) {
 }
 
 //native WS_GetClientAddress(WSConnection: connection, ip[WS_ADDRESS_LENGTH], length);
-AMXNATIVE(GetClientAddress) {
-	if (g_HTTPDaemon == nullptr) {
+AMXNATIVE(GetClientAddress)
+{
+	if (g_HTTPDaemon == nullptr)
+	{
 		return 0;
 	}
 
 	MHD_Connection *connection = (MHD_Connection *)params[1];
 
 	const struct sockaddr_in *addr = (struct sockaddr_in *)MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS)->client_addr;
-	if (addr == nullptr) {
+	if (addr == nullptr)
+	{
 		return 0;
 	}
 
 	char *ip = inet_ntoa(addr->sin_addr);
-	if (ip == nullptr) {
+	if (ip == nullptr)
+	{
 		return 0;
 	}
 
@@ -184,8 +207,10 @@ AMXNATIVE(GetClientAddress) {
 }
 
 //native WS_QueueResponse(WSConnection: connection, WSStatusCode: status, WSResponse: response);
-AMXNATIVE(QueueResponse) {
-	if (g_HTTPDaemon == nullptr) {
+AMXNATIVE(QueueResponse)
+{
+	if (g_HTTPDaemon == nullptr)
+	{
 		return 0;
 	}
 
@@ -202,8 +227,10 @@ AMXNATIVE(QueueResponse) {
 }
 
 //native WS_GetArgument(WSConnection: connection, WSRequestType: type, const key[], value[], valuelength);
-AMXNATIVE(GetArgument) {
-	if (g_HTTPDaemon == nullptr) {
+AMXNATIVE(GetArgument)
+{
+	if (g_HTTPDaemon == nullptr)
+	{
 		return 0;
 	}
 
@@ -213,7 +240,8 @@ AMXNATIVE(GetArgument) {
 	const char *key = MF_GetAmxString(amx, params[3], 0, &len);
 
 	const char *value = MHD_lookup_connection_value(connection, kind, key);
-	if (value == nullptr) {
+	if (value == nullptr)
+	{
 		return 0;
 	}
 
@@ -222,7 +250,8 @@ AMXNATIVE(GetArgument) {
 }
 
 
-AMX_NATIVE_INFO g_NativeList[] = {
+AMX_NATIVE_INFO g_NativeList[] =
+{
 	{"WS_RegisterRequestCallback", RegisterRequestCallback},
 
 	{"WS_CreateStringResponse", CreateStringResponse},
@@ -239,8 +268,3 @@ AMX_NATIVE_INFO g_NativeList[] = {
 
 	{nullptr, nullptr}
 };
-
-
-extern "C" void __cxa_pure_virtual() {
-
-}
